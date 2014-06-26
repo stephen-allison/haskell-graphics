@@ -1,0 +1,6 @@
+# ignore haskell intermediate filed
+*.o
+*.hi
+
+# binaries 
+tutorial_one
