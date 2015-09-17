@@ -10,6 +10,10 @@ import Graphics.UI.GLUT
 type N = GLfloat
 type Point = (N, N)
 
+data Box = Box {left::N, right::N, top::N, bottom::N} deriving Show
+simpleBox :: Box
+simpleBox = Box {left=(-1), right=1, top=1, bottom=(-1)}
+
 x_ :: Point -> N
 x_ (x, y) = x
 
@@ -30,10 +34,8 @@ foldPoint box (lastpt, nextpt)
               | otherwise = Just (newnextpt, (newnextpt, flippedpt))
               where
                 crosspt = crosspoint box lastpt nextpt
-                newnextpt = case crosspt of Just p -> p
-                                            Nothing -> nextpt
-                flippedpt = case crosspt of Just p -> flipPoint p nextpt
-                                            Nothing -> nextpt
+                (newnextpt, flippedpt) = case crosspt of Just p -> (p, flipPoint p nextpt)
+                                                         Nothing -> (nextpt, nextpt)
 
 flipPoint :: Point -> Point -> Point
 flipPoint (cx, cy) (x, y)
@@ -61,9 +63,7 @@ crossings box p1 p2 = map inBox' maybeCrossings
 lineInBox box p1 p2 = (inBox box p1) && (inBox box p2)
 
 
-data Box = Box {left::N, right::N, top::N, bottom::N} deriving Show
-simpleBox :: Box
-simpleBox = Box {left=(-1), right=1, top=1, bottom=(-1)}
+
 
 yCrossing :: N -> Point -> Point -> Maybe Point
 yCrossing yVal p1 p2
