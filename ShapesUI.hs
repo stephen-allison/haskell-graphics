@@ -13,11 +13,13 @@ main = do
 
 display = do
   clear [ColorBuffer]
-
+  let ss = [((-0.5,0.25),(-0.25,0.25)),((-0.25,0.25),(0.25,0.25)),((0.25,0.25),(0.5,0.25))]
   let tri = triangle (0,0.5) (0.5,0) (-0.5,0)
   let tri2 = triangle (0,0.75) (0.5,0.25) (-0.5,0.25)
+  let tri3 = triangle (0,0.2) (0.3,-0.5) (-0.3,-0.5)
+  let tri4 = triangle (-0.3,-0.9) (0.3,-0.9) (0,-0.4)
   let col = color3f 1 1 0
-  let s = merge tri tri2
+  let s = merge tri3 (merge tri4 (merge tri tri2))
   --let cuts1 = nub . mconcat $ cutLine <$> tri2 <*> tri
   --let cuts2 = nub . mconcat $ cutLine <$> tri <*> tri2
   --drawShape tri  (color3f 1 0 1)
@@ -25,7 +27,8 @@ display = do
   --drawShape cuts1 (color3f 1 0 0)
   --drawShape cuts2 (color3f 0 1 0)
   putStrLn $ show s
-  drawShape s (color3f 0 1 0)
+  --drawShape s (color3f 0 1 0)
+  drawShape s (color3f 1 0 0)
   flush
 
 drawShape s colour= do

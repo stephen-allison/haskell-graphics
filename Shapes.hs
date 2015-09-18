@@ -1,5 +1,6 @@
 module Shapes where
 import Data.List
+import Data.Maybe
 
 type Point = (Float, Float)
 type LineSeg = (Point, Point)
@@ -23,15 +24,40 @@ cutLine2 :: LineSeg -> LineSeg -> [LineSeg]
 cutLine2 a b = (cutLine a b) ++ (cutLine b a)
 
 merge :: Shape -> Shape -> Shape
-merge s1 s2 =  cuts
-     where
-     cuts1 = mconcat $ map longest $ chunk 3 $ cutLine <$> s1 <*> s2
-     cuts2 = mconcat $ map longest $ chunk 3 $ cutLine <$> s2 <*> s1
-     filtered1 = filter (not . linesegInShape s2) cuts1
-     filtered2 = filter (not . linesegInShape s1) cuts2
-     cuts = nub (filtered1 ++ filtered2)
+merge s1 s2 = (merge' s1 s2) ++ (merge' s2 s1)
 
-linesegInShape s (p1, p2) = inShape p1 s || inShape p2 s
+merge' s1 s2 = filter (not . linesegInShape s2) $ concat segs
+     where
+     ccs = cc s1 s2
+     pts = map (sort . nub . pointsInShape . concat) ccs
+     segs = map (\ps -> zip ps (drop 1 ps)) pts
+
+{-
+     cuts1 = filt s2 $ cuts' s1 s2
+     cuts2 = filt s1 $ cuts' s2 s1
+     filt s = filter (not . linesegInShape s)
+-}
+{-
+     let ccs = cc triangle2 triangle1
+     let pts = sort $ nub $ pointsInShape $ concat $ ccs !! 1
+     --putStrLn $ show $ sort $ nub $ pointsInShape $ concat $ ccs !! 0
+     putStrLn $ show $ pts
+     putStrLn $ show $ map ((flip inShape) triangle1) pts
+     putStrLn $ show $ map (crossingsToEdge triangle1) pts
+     --putStrLn $ show $ sort $ nub $ pointsInShape $ concat $ ccs !! 2
+     let segs = zip pts (drop 1 pts)
+     print "----"
+     print segs
+     --let filt = filter (not . linesegInShape triangle1)
+     let r = map (linesegInShape triangle1) segs
+     print $ r
+-}
+
+
+cuts' s1 s2 = nub . mconcat . mconcat $ chunk 3 $ cutLine <$> s1 <*> s2
+cc s1 s2 = chunk (length s2) $ cutLine <$> s1 <*> s2
+
+linesegInShape s (p1, p2) = inShape p1 s && inShape p2 s
 
 longer :: [a] -> [a] -> [a]
 longer a b = if (length a > length b) then a else b
@@ -45,7 +71,7 @@ join (p1,p2) (p3,p4) = nub . sortOn distance $ [p1,p2,p3,p4]
 
 dist (x1,y1) (x2,y2) = sqrt ((x2-x1)**2 + (y2-y1)**2)
 
-pointsInShape s = nub  foldr (\(p1,p2) acc -> p1:p2:acc) [] s
+pointsInShape s = foldr (\(p1,p2) acc -> p1:p2:acc) [] s
 
 chunk :: Int -> [a] -> [[a]]
 chunk n xs
@@ -75,14 +101,23 @@ crossing seg1 seg2
 
 
 inShape :: Point -> Shape -> Bool
-inShape p s = val `mod` 2 == 1
+inShape p s = total /= 0
      where
-     val = sum (map maybeVal crossings)
-     crossings = crossing <$> [toedge] <*> s
-     toedge = (p, (100, gety p))
+     vals = map scorefn (crossingsToEdge s p)
+     total = sum (map (\n -> n `mod` 2)  vals)
+     verts = nub . pointsInShape $ s
+     scorefn ps = length $ filt ps
+          where
+          filt = filter (\p -> not (p `elem` verts))
 
-maybeVal Nothing = 0
-maybeVal (Just _) = 1
+
+
+crossingsToEdge s p = map catMaybes $ edgeCrossings s p
+
+edgeCrossings s p = chunk (length s) (crossing <$> toedge <*> s)
+     where toedge = [(p, (100, gety p)),
+                     (p, (getx p, 100)),
+                     (p, (100 * getx p, 100 * gety p))]
 
 slope :: LineSeg -> Float
 slope (p1, p2)
@@ -121,12 +156,14 @@ inf = read "Infinity" :: Float
 
 triangle1 = triangle (0,0.5) (0.5,0) (-0.5,0)
 triangle2 = triangle (0,0.75) (0.5,0.25) (-0.5,0.25)
+triangle3 = triangle (-0.2,0.9) (0.2,0.9) (0,-0.9)
+
 
 test = do
-     let p1 = (0,0)
-     let p2 = (3,3)
-     let p3 = (0,3)
-     let p4 = (3,0)
-     putStrLn $ show $ crossing (p1,p2) (p3,p4)
-     putStrLn $ show $ crossing (p1,p3) (p2,p4)
+     let s1 = merge' triangle2 triangle1
+     putStrLn $ show s1
+     let s2 = merge' triangle1 triangle2
+     putStrLn $ show s2
+
+
 
