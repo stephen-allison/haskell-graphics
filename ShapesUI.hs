@@ -11,24 +11,38 @@ main = do
   mainLoop
 
 
+
 display = do
   clear [ColorBuffer]
-  let ss = [((-0.5,0.25),(-0.25,0.25)),((-0.25,0.25),(0.25,0.25)),((0.25,0.25),(0.5,0.25))]
-  let tri = triangle (0,0.5) (0.5,0) (-0.5,0)
-  let tri2 = triangle (0,0.75) (0.5,0.25) (-0.5,0.25)
-  let tri3 = triangle (0,0.2) (0.3,-0.5) (-0.3,-0.5)
-  let tri4 = triangle (-0.3,-0.9) (0.3,-0.9) (0,-0.4)
+
   let col = color3f 1 1 0
-  let s = merge tri3 (merge tri4 (merge tri tri2))
-  --let cuts1 = nub . mconcat $ cutLine <$> tri2 <*> tri
-  --let cuts2 = nub . mconcat $ cutLine <$> tri <*> tri2
-  --drawShape tri  (color3f 1 0 1)
-  --drawShape tri2 (color3f 0 1 0)
-  --drawShape cuts1 (color3f 1 0 0)
-  --drawShape cuts2 (color3f 0 1 0)
-  putStrLn $ show s
-  --drawShape s (color3f 0 1 0)
-  drawShape s (color3f 1 0 0)
+
+  let cut12 = cutShapeWithShape triangle1 triangle0
+  let cut21 = cutShapeWithShape triangle0 triangle1
+  let ex12 = excludeContained triangle0 cut12
+  let ex21 = excludeContained triangle1 cut21
+
+  print "--ex12--"
+  print ex12
+  print "--ex21--"
+  print ex21
+  let s = fuse ex12 ex21
+{-
+  let cut3s = cutShapeWithShape triangle3 s
+  --print cut3s
+  let cuts3 = cutShapeWithShape s triangle3
+  --print cuts3
+  let ex3s = excludeContained s cut3s
+  let exs3 = excludeContained triangle3 s
+  --print ex3s
+  --print exs3
+
+  let s2 = fuse ex3s exs3
+  print s2
+-}
+  --drawShape triangle2 (color3f 0 1 0)
+  drawShape s (color3f 1 1 0)
+  --drawShape ex3 (color3f 1 0 1)
   flush
 
 drawShape s colour= do
