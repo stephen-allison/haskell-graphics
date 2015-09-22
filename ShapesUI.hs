@@ -16,33 +16,11 @@ display = do
   clear [ColorBuffer]
 
   let col = color3f 1 1 0
+  let s = perimeterLines [triangle1, triangle2, triangle0, triangle3]
 
-  let cut12 = cutShapeWithShape triangle1 triangle0
-  let cut21 = cutShapeWithShape triangle0 triangle1
-  let ex12 = excludeContained triangle0 cut12
-  let ex21 = excludeContained triangle1 cut21
 
-  print "--ex12--"
-  print ex12
-  print "--ex21--"
-  print ex21
-  let s = fuse ex12 ex21
-{-
-  let cut3s = cutShapeWithShape triangle3 s
-  --print cut3s
-  let cuts3 = cutShapeWithShape s triangle3
-  --print cuts3
-  let ex3s = excludeContained s cut3s
-  let exs3 = excludeContained triangle3 s
-  --print ex3s
-  --print exs3
-
-  let s2 = fuse ex3s exs3
-  print s2
--}
-  --drawShape triangle2 (color3f 0 1 0)
   drawShape s (color3f 1 1 0)
-  --drawShape ex3 (color3f 1 0 1)
+  --drawShape triangle2 (color3f 1 0 1)
   flush
 
 drawShape s colour= do

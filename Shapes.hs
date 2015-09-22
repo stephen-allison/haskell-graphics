@@ -6,7 +6,8 @@ type Point = (Float, Float)
 type LineSeg = (Point, Point)
 type Box = (Point, Point, Point, Point)
 type Shape = [LineSeg]
-
+type TaggedSeg = (LineSeg, Bool)
+type TaggedShape = [TaggedSeg]
 
 lineSeg :: Float -> Float -> Float -> Float -> LineSeg
 lineSeg x1 y1 x2 y2 = ((x1, y1), (x2, y2))
@@ -22,20 +23,19 @@ triangle :: Point -> Point -> Point -> Shape
 triangle p1 p2 p3 = [(p1,p2), (p2,p3), (p3,p1)]
 
 
+{-
+(+) <$> [1,2,3] <*> [70,80,90] = [71,81,91,72,82,92,73,83,93]
+-}
+--join :: [Shape] -> TaggedShape
+perimeterLines shapes = concat linesRemoved
+     where allSegs = concat shapes
+           cutShapes = zip shapes (map cutter shapes)
+           cutter = (flip cutShapeWithShape) allSegs
+           removeLines lines = foldl lineRemover lines
+           lineRemover lines shape = excludeContained shape lines
+           linesRemoved = map (\(shape,lines) -> removeLines lines (shapes \\ [shape] )) cutShapes
 
-fuse :: [LineSeg] -> [LineSeg] -> [LineSeg]
-fuse as bs = build rest [start]
-     where start = head as
-           rest = (tail as) ++ bs
-           build [] built = reverse built
-           build segs built = build updatedSegs updatedBuilt
-               where updatedBuilt = nextSeg' : built
-                     updatedSegs = segs \\ updatedBuilt
-                     prevSeg = head built
-                     nextSeg = find (\s -> fst s == snd prevSeg) segs
-                     nextSeg' = case nextSeg
-                                   of   Just s  -> s
-                                        Nothing -> (snd.last $ built, fst start)
+
 
 pointsToLineSegs :: [Point] -> [LineSeg]
 pointsToLineSegs ps = zip ps (tail ps)
@@ -114,7 +114,9 @@ isLeftOf :: Point -> LineSeg -> Bool
 
 
 contains :: Shape -> Point -> Bool
-contains segs p = and $ map (isLeftOf p) segs
+contains segs p = and $ map (leftOfOrOn p) segs
+     where
+     leftOfOrOn p seg = isLeftOf p seg || onLine p seg
 
 
 
@@ -128,7 +130,16 @@ slope (p1, p2)
 
 
 onLine :: Point -> LineSeg -> Bool
-onLine p (p1, p2) = xok && yok
+onLine p (a,b) = (m1 == m2) && bounded
+     where
+     m1 = fix $ slope (a,b)
+     m2 = fix $ slope (a,p)
+     bounded = pointInBoundingBox p (a,b)
+
+
+
+pointInBoundingBox :: Point -> LineSeg -> Bool
+pointInBoundingBox p (p1, p2) = xok && yok
      where
      xok = (getx p <= xmax) && (getx p >= xmin)
      yok = (gety p <= ymax) && (gety p >= ymin)
@@ -167,11 +178,6 @@ triangle2 = triangle (0,0.75) (-0.5,0.25) (0.5,0.25)
 triangle3 = triangle (0,0.9) (0.2,-0.6) (-0.2,-0.6)
 
 test = do
-     let cut12 = cutShapeWithShape triangle1 triangle2
-     let cut21 = cutShapeWithShape triangle2 triangle1
-     let ex12 = excludeContained triangle2 cut12
-     let ex21 = excludeContained triangle1 cut21
-
-     let fused = fuse ex12 ex21
-     print fused
-     print "done"
+     let s = perimeterLines [triangle0,triangle1]
+     print s
+     return s
