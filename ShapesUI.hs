@@ -16,11 +16,13 @@ display = do
   clear [ColorBuffer]
 
   let col = color3f 1 1 0
-  let s = perimeterLines [triangle1, triangle2, triangle0, triangle3]
+  let s = perimeterLines [triangle3, triangle0, triangle1]
 
 
-  drawShape s (color3f 1 1 0)
-  --drawShape triangle2 (color3f 1 0 1)
+
+  --drawShape triangle2 (color3f 1 1 0)
+  --drawShape triangle3 (color3f 0 1 0)
+  drawShape s (color3f 1 0 1)
   flush
 
 drawShape s colour= do

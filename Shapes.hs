@@ -76,9 +76,9 @@ pointsFromShape = foldr (\(p1,p2) acc -> p1:p2:acc) []
 crossing :: LineSeg -> LineSeg -> Maybe Point
 crossing seg1 seg2
      | slope seg1 == slope seg2 = Nothing
-     | slope seg1 == inf = bounded (getx p1, (gety p3) + (slope seg2) * (getx p3 - getx p1))
+     | slope seg1 == inf = inbounds (getx p1, (gety p3) + (slope seg2) * (getx p3 - getx p1))
      | slope seg2 == inf = crossing seg2 seg1
-     | otherwise = bounded (fix x, fix y)
+     | otherwise = inbounds (fix x, fix y)
      where
      (p1, p2) = seg1
      (x1, y1) = p1
@@ -90,7 +90,7 @@ crossing seg1 seg2
      m' = slope seg2
      x = (y1 - y1' + m'*x1' - m*x1) / (m' - m)
      y = y1 + m*(x - x1)
-     bounded p = if (onLine p seg1) && (onLine p seg2) then Just p else Nothing
+     inbounds p = if (onLine p seg1) && (onLine p seg2) then Just p else Nothing
 
 
 
@@ -130,7 +130,7 @@ slope (p1, p2)
 
 
 onLine :: Point -> LineSeg -> Bool
-onLine p (a,b) = (m1 == m2) && bounded
+onLine p (a,b) =  bounded
      where
      m1 = fix $ slope (a,b)
      m2 = fix $ slope (a,p)
@@ -175,9 +175,31 @@ inf = read "Infinity" :: Float
 triangle0 = triangle (0,0.25) (-0.5,-0.25) (0.5,-0.25)
 triangle1 = triangle (0,0.95) (-0.5,0) (0.5,0)
 triangle2 = triangle (0,0.75) (-0.5,0.25) (0.5,0.25)
-triangle3 = triangle (0,0.9) (0.2,-0.6) (-0.2,-0.6)
+triangle3 = triangle (0,0.9) (-0.2,-0.6) (0.2,-0.6)
+triangle4 = triangle (0.1,0.9) (-0.1,-0.6) (0.2,-0.6)
 
 test = do
-     let s = perimeterLines [triangle0,triangle1]
+     let inputs = [triangle2, triangle3]
+     let s = perimeterLines inputs
+     print "inputs:"
+     print inputs
+     print ""
+     let allSegs = concat inputs
+     print "allSegs:"
+     print allSegs
+     let cutter = (flip cutShapeWithShape) allSegs
+     let cutShapes = zip inputs (map cutter inputs)
+     print "cutShapes:"
+     print $  map fst cutShapes
+     print $  map snd cutShapes
+     print ""
+     let lineRemover lines shape = excludeContained shape lines
+     let removeLines lines = foldl lineRemover lines
+     let linesRemoved = map (\(shape,lines) -> removeLines lines (inputs \\ [shape] )) cutShapes
+
+     print "LinesRemoved:"
+     print linesRemoved
+     print "output:"
      print s
+     print "done"
      return s
