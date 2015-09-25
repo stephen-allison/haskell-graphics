@@ -23,6 +23,12 @@ triangle :: Point -> Point -> Point -> Shape
 triangle p1 p2 p3 = [(p1,p2), (p2,p3), (p3,p1)]
 
 
+
+box :: Point -> Point -> Shape
+box (x1,y1) (x2, y2) = zip points (tail points)
+     where points = [(x1,y1), (x1,y2), (x2,y2), (x2,y1), (x1,y1)]
+
+
 {-
 (+) <$> [1,2,3] <*> [70,80,90] = [71,81,91,72,82,92,73,83,93]
 -}
@@ -142,8 +148,8 @@ onLine p (a,b) =  bounded && (m1 == m2)
 pointInBoundingBox :: Point -> LineSeg -> Bool
 pointInBoundingBox p (p1, p2) = xok && yok
      where
-     xok = (getx p <= xmax) && (getx p >= xmin)
-     yok = (gety p <= ymax) && (gety p >= ymin)
+     xok = (fix (getx p) <= xmax) && (fix (getx p) >= xmin)
+     yok = (fix (gety p) <= ymax) && (fix (gety p) >= ymin)
      (xmin, xmax, ymin, ymax) = bounds (p1, p2)
 
 
@@ -178,7 +184,7 @@ triangle1 = triangle (0,0.95) (-0.5,0) (0.5,0)
 triangle2 = triangle (0,0.75) (-0.5,0.25) (0.5,0.25)
 triangle3 = triangle (0,0.9) (-0.2,-0.6) (0.2,-0.6)
 triangle4 = triangle (0,-0.75) (0.5,0.25) (-0.5,0.25)
-
+box1 = box (-0.7,-0.45) (0.7, -0.55)
 
 test = do
      let inputs = [triangle2, triangle1]
