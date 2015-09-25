@@ -2,19 +2,19 @@ module Shapes where
 import Data.List
 import Data.Maybe
 
-type Point = (Float, Float)
+type Point = (Double, Double)
 type LineSeg = (Point, Point)
 type Box = (Point, Point, Point, Point)
 type Shape = [LineSeg]
 type TaggedSeg = (LineSeg, Bool)
 type TaggedShape = [TaggedSeg]
 
-lineSeg :: Float -> Float -> Float -> Float -> LineSeg
+lineSeg :: Double -> Double -> Double -> Double -> LineSeg
 lineSeg x1 y1 x2 y2 = ((x1, y1), (x2, y2))
 
 
 
-point :: Float -> Float -> Point
+point :: Double -> Double -> Point
 point = (,)
 
 
@@ -63,7 +63,7 @@ excludeContained contr = filter (\s -> not $ lineSegInShape contr s)
 
 
 
-dist :: Point -> Point -> Float
+dist :: Point -> Point -> Double
 dist (x1,y1) (x2,y2) = sqrt ((x2-x1)**2 + (y2-y1)**2)
 
 
@@ -78,7 +78,7 @@ crossing seg1 seg2
      | slope seg1 == slope seg2 = Nothing
      | slope seg1 == inf = inbounds (getx p1, (gety p3) + (slope seg2) * (getx p3 - getx p1))
      | slope seg2 == inf = crossing seg2 seg1
-     | otherwise = inbounds (fix x, fix y)
+     | otherwise = inbounds  (x, y)
      where
      (p1, p2) = seg1
      (x1, y1) = p1
@@ -91,6 +91,7 @@ crossing seg1 seg2
      x = (y1 - y1' + m'*x1' - m*x1) / (m' - m)
      y = y1 + m*(x - x1)
      inbounds p = if (onLine p seg1) && (onLine p seg2) then Just p else Nothing
+
 
 
 
@@ -120,7 +121,7 @@ contains segs p = and $ map (leftOfOrOn p) segs
 
 
 
-slope :: LineSeg -> Float
+slope :: LineSeg -> Double
 slope (p1, p2)
      | dx == 0 = inf
      | otherwise = (gety p2 - gety p1) / dx
@@ -130,7 +131,7 @@ slope (p1, p2)
 
 
 onLine :: Point -> LineSeg -> Bool
-onLine p (a,b) =  bounded
+onLine p (a,b) =  bounded && (m1 == m2)
      where
      m1 = fix $ slope (a,b)
      m2 = fix $ slope (a,p)
@@ -147,7 +148,7 @@ pointInBoundingBox p (p1, p2) = xok && yok
 
 
 
-bounds :: LineSeg -> (Float, Float, Float, Float)
+bounds :: LineSeg -> (Double, Double, Double, Double)
 bounds (p1, p2) = (xmin, xmax, ymin, ymax)
      where
      xmin = min (getx p1) (getx p2)
@@ -170,16 +171,17 @@ fix = fixdp 3
 
 getx = fst
 gety = snd
-inf = read "Infinity" :: Float
+inf = read "Infinity" :: Double
 
 triangle0 = triangle (0,0.25) (-0.5,-0.25) (0.5,-0.25)
 triangle1 = triangle (0,0.95) (-0.5,0) (0.5,0)
 triangle2 = triangle (0,0.75) (-0.5,0.25) (0.5,0.25)
 triangle3 = triangle (0,0.9) (-0.2,-0.6) (0.2,-0.6)
-triangle4 = triangle (0.1,0.9) (-0.1,-0.6) (0.2,-0.6)
+triangle4 = triangle (0,-0.75) (0.5,0.25) (-0.5,0.25)
+
 
 test = do
-     let inputs = [triangle2, triangle3]
+     let inputs = [triangle2, triangle1]
      let s = perimeterLines inputs
      print "inputs:"
      print inputs
